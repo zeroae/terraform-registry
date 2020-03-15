@@ -52,7 +52,7 @@ def search():
 
     # Optional
     offset = bp.current_request.query_params.get("offset", 0)
-    limit = bp.current_request.query_params.get("limit", ZAE_TFR_LIMIT)
+    limit = bp.current_request.query_params.get("limit", ZTR_LIMIT)
     provider = bp.current_request.query_params.get("provider", None)
     verified = bp.current_request.query_params.get("verified", None)
     namespace = bp.current_request.query_params.get("namespace", None)
@@ -68,7 +68,7 @@ def list_latest_all_providers(namespace, name):
     """
     # Optional
     offset = bp.current_request.uri_params.get("offset", 0)
-    limit = bp.current_request.uri_params.get("limit", ZAE_TFR_LIMIT)
+    limit = bp.current_request.uri_params.get("limit", ZTR_LIMIT)
     return {}
 
 
