@@ -15,3 +15,5 @@
 
 # Configuration Options
 ZAE_TFR_LIMIT = 1_000
+
+ZAE_TFR_DYNAMODB_PREFIX = "ZAE-TFR-"
