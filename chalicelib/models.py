@@ -38,9 +38,6 @@ class ModuleName(object):
     name: str
     provider: str
 
-    def __init__(self, value: str):
-        self.namespace, self.name, self.provider = value.split("/")
-
 
 class ModuleNameAttribute(Attribute):
     """
