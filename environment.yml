@@ -8,6 +8,11 @@ dependencies:
   - ipython
   - liquidprompt
   - pre-commit
+
   - chalice
   - pynamodb
+
+  - pytest
+  - pytest-chalice
+
   # - ngrok, open an account at ngrok.com
