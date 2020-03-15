@@ -5,4 +5,9 @@ channels:
 
 dependencies:
   - python 3.7
+  - ipython
+  - liquidprompt
+  - pre-commit
   - chalice
+  - pynamodb
+  # - ngrok, open an account at ngrok.com
