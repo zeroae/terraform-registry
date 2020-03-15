@@ -71,6 +71,9 @@ class ModuleModel(Model):
     published_at = UTCDateTimeAttribute(default_for_new=datetime.utcnow)
 
     verified = BooleanAttribute(null=True)
+    
+    owner = UnicodeAttribute(null=True)
+    description = UnicodeAttribute(null=True)
 
     downloads = NumberAttribute(default_for_new=0)
 
