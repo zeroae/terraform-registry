@@ -4,15 +4,18 @@ channels:
   - conda-forge
 
 dependencies:
-  - python 3.7
+  # Development Dependencies
+  - chalice 1.12
   - ipython
   - liquidprompt
+  - python 3.7
   - pre-commit
+  # - ngrok, open an account at ngrok.com
 
-  - chalice
+  # Runtime Dependencies (must match requirements.txt)
   - pynamodb
 
+  # Test Dependencies
+  - coverage
   - pytest
   - pytest-chalice
-
-  # - ngrok, open an account at ngrok.com

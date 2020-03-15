@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Configuration Options
-ZAE_TFR_LIMIT = 1_000
+ZTR_LIMIT = 1_000
 
-ZAE_TFR_DYNAMODB_PREFIX = "ZAE-TFR-"
+ZTR_DYNAMODB_URL = None
+ZTR_DYNAMODB_TABLE_PREFIX = "ZAE-TFR-"
