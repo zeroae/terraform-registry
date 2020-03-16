@@ -38,6 +38,10 @@ class ModuleName(object):
     name: str
     provider: str
 
+    def __str__(self) -> str:
+        """Return the `/`-separated form of the module name"""
+        return "/".join([self.namespace, self.name, self.provider])
+
 
 class ModuleNameAttribute(Attribute):
     """
@@ -47,7 +51,7 @@ class ModuleNameAttribute(Attribute):
     attr_type = STRING
 
     def serialize(self, value: ModuleName) -> str:
-        return "/".join([value.namespace, value.name, value.provider])
+        return str(value)
 
     def deserialize(self, value: str) -> ModuleName:
         return ModuleName(*value.split("/"))

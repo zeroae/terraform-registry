@@ -23,6 +23,12 @@ def test_module_name_init():
     assert fqmn.provider == "provider"
 
 
+def test_module_name_str():
+    fqmn: ModuleName = ModuleName("namespace", "name", "provider")
+
+    assert str(fqmn) == "namespace/name/provider"
+
+
 def test_module_name_attribute_serialize():
     mn_attr: ModuleNameAttribute = ModuleNameAttribute()
 
