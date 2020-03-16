@@ -54,6 +54,23 @@ def test_list_versions(client: RequestHandler, monkeypatch) -> None:
     assert response_versions == versions
 
 
+def test_download_latest(client: RequestHandler, monkeypatch) -> None:
+    fqmn = "namespace/name/provider"
+    versions = ["0.0.0", "0.1.0"]
+    fqvmn = f"{fqmn}/{versions[-1]}"
+
+    def mock_query(hash_key, **kwargs):
+        return [ModuleModel(hash_key, version=version) for version in versions]
+
+    monkeypatch.setattr(ModuleModel, "query", mock_query)
+
+    response = client.get(f"/v1/{fqmn}/download")
+
+    assert response.status_code == HTTPStatus.FOUND
+    assert "Location" in response.headers
+    assert response.headers["Location"] == f"/v1/{fqvmn}/download"
+
+
 def test_download_success(client: RequestHandler, monkeypatch) -> None:
     fqvmn = "namespace/name/provider/0.1.0"
 
@@ -71,6 +88,7 @@ def test_download_success(client: RequestHandler, monkeypatch) -> None:
     response = client.get(f"/v1/{fqvmn}/download")
 
     assert response.status_code == HTTPStatus.NO_CONTENT
+    assert response.headers["X-Terraform-Get"] == "./name"
 
 
 def test_download_failure(client: RequestHandler) -> None:
