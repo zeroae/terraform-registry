@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import cmp_to_key
 from http import HTTPStatus
+from re import sub
 
 import semver
 from chalice import Blueprint, Response, ChaliceViewError
@@ -143,8 +144,9 @@ def download_latest(namespace: str, name: str, provider: str):
             status_code=HTTPStatus.NOT_FOUND,
             body={"errors": [f"Module {fqmn} was not found!"]},
         )
-    new_path = bp.current_request.context["path"].replace(
-        "/download", f"/{max_version}/download"
+
+    new_path = sub(
+        r"/download$", f"/{max_version}/download", bp.current_request.context["path"]
     )
     return Response(
         status_code=HTTPStatus.FOUND,
