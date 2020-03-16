@@ -12,8 +12,10 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from functools import cmp_to_key
 from http import HTTPStatus
 
+import semver
 from chalice import Blueprint, Response, ChaliceViewError
 from pynamodb.exceptions import DoesNotExist
 
@@ -118,18 +120,37 @@ def get_module(namespace, name, provider, version):
 
 
 @bp.route("/{namespace}/{name}/{provider}/download")
-def download_latest(namespace, name, provider):
+def download_latest(namespace: str, name: str, provider: str):
     """
     Download the Latest Version of a Module
     ref: https://www.terraform.io/docs/registry/api.html#download-the-latest-version-of-a-module
 
-    :param namespace:
-    :param name:
-    :param provider:
-    :return:
+    :param namespace: The module namespace
+    :param name: The module name
+    :param provider: The module primary provider
+    :return: An HTTP 302 redirecting to the latest download link
     """
 
-    raise NotImplementedError()
+    fqmn = ModuleName(namespace, name, provider)
+    max_version = max(
+        (module.version for module in ModuleModel.query(fqmn)),
+        key=cmp_to_key(semver.compare),
+        default=None,
+    )
+
+    if max_version is None:
+        return Response(
+            status_code=HTTPStatus.NOT_FOUND,
+            body={"errors": [f"Module {fqmn} was not found!"]},
+        )
+    new_path = bp.current_request.context["path"].replace(
+        "/download", f"/{max_version}/download"
+    )
+    return Response(
+        status_code=HTTPStatus.FOUND,
+        headers={"Location": new_path},
+        body=f'<a href="{new_path}">Found</a>.',
+    )
 
 
 @bp.route("/{namespace}/{name}/{provider}/{version}/download")

@@ -62,7 +62,8 @@ def test_download_latest(client: RequestHandler, monkeypatch) -> None:
     def mock_query(hash_key, **kwargs):
         from random import shuffle
 
-        return [ModuleModel(hash_key, version=version) for version in shuffle(versions)]
+        shuffle(versions)
+        return [ModuleModel(hash_key, version=version) for version in versions]
 
     monkeypatch.setattr(ModuleModel, "query", mock_query)
 
@@ -76,6 +77,7 @@ def test_download_latest(client: RequestHandler, monkeypatch) -> None:
 def test_download_latest_dne(client: RequestHandler, monkeypatch) -> None:
     fqmn = "namespace/name/provider"
 
+    monkeypatch.setattr(ModuleModel, "query", lambda *args, **kwargs: [])
     response = client.get(f"/v1/{fqmn}/download")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
