@@ -93,7 +93,18 @@ def list_versions(namespace, name, provider):
     ref: https://www.terraform.io/docs/registry/api.html#list-available-versions-for-a-specific-module
     """
 
-    raise NotImplementedError()
+    fqmn = ModuleName(namespace, name, provider)
+    # noinspection PyTypeChecker
+    modules = [
+        {
+            "source": str(fqmn),
+            "versions": [
+                {"version": v_module.version} for v_module in ModuleModel.query(fqmn)
+            ],
+        }
+    ]
+
+    return {"modules": modules}
 
 
 @bp.route("/{namespace}/{name}/{provider}/{version}")
