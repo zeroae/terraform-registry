@@ -19,7 +19,7 @@ from pytest_chalice.handlers import RequestHandler
 from chalicelib.models import ModuleModel
 
 
-def test_list_versions_response_schema(client: RequestHandler, monkeypatch) -> None:
+def test_list_versions_response_schema(client: RequestHandler) -> None:
     fqmn = "namespace/name/provider"
 
     response = client.get(f"/v1/{fqmn}/versions")
@@ -37,6 +37,21 @@ def test_list_versions_response_schema(client: RequestHandler, monkeypatch) -> N
 
     assert "versions" in first_module
     assert type(first_module["versions"]) == list
+
+
+def test_list_versions(client: RequestHandler, monkeypatch) -> None:
+    fqmn = "namespace/name/provider"
+    versions = ["0.1.0", "0.2.0", "0.3.0"]
+
+    def mock_query(hash_key, **kwargs):
+        return [ModuleModel(hash_key, version=version) for version in versions]
+
+    monkeypatch.setattr(ModuleModel, "query", mock_query)
+
+    response = client.get(f"/v1/{fqmn}/versions")
+    response_versions = [v["version"] for v in response.json["modules"][0]["versions"]]
+
+    assert response_versions == versions
 
 
 def test_download_success(client: RequestHandler, monkeypatch) -> None:
