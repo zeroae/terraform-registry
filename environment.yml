@@ -14,7 +14,7 @@ dependencies:
 
   # Runtime Dependencies (must match requirements.txt)
   - pynamodb
-  - semver  # python-semver on pypi?
+  - semver
 
   # Test Dependencies
   - coverage
