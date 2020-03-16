@@ -13,8 +13,15 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from environs import Env
+
+env = Env()
+env.read_env()
+
 # Configuration Options
 ZTR_LIMIT = 1_000
 
-ZTR_DYNAMODB_URL = None
-ZTR_DYNAMODB_TABLE_PREFIX = "ZAE-TFR-"
+with env.prefixed("ZTR_"):
+    with env.prefixed("DYNAMODB_"):
+        ZTR_DYNAMODB_URL = env.str("URL", default=None)
+        ZTR_DYNAMODB_TABLE_PREFIX = env.str("TABLE_PREFIX")

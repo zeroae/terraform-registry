@@ -12,10 +12,11 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from chalicelib.models import ModuleName, ModuleNameAttribute
 
 
 def test_module_name_init():
+    from chalicelib.models import ModuleName
+
     fqmn: ModuleName = ModuleName("namespace", "name", "provider")
 
     assert fqmn.namespace == "namespace"
@@ -24,12 +25,16 @@ def test_module_name_init():
 
 
 def test_module_name_str():
+    from chalicelib.models import ModuleName
+
     fqmn: ModuleName = ModuleName("namespace", "name", "provider")
 
     assert str(fqmn) == "namespace/name/provider"
 
 
 def test_module_name_attribute_serialize():
+    from chalicelib.models import ModuleNameAttribute, ModuleName
+
     mn_attr: ModuleNameAttribute = ModuleNameAttribute()
 
     fqmn_str: str = mn_attr.serialize(ModuleName("namespace", "name", "provider"))
@@ -37,6 +42,8 @@ def test_module_name_attribute_serialize():
 
 
 def test_module_name_attribute_deserialize():
+    from chalicelib.models import ModuleNameAttribute, ModuleName
+
     mn_attr: ModuleNameAttribute = ModuleNameAttribute()
 
     fqmn: ModuleName = mn_attr.deserialize("namespace/name/provider")

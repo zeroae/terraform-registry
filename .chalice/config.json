@@ -3,7 +3,12 @@
   "app_name": "terraform-registry",
   "stages": {
     "dev": {
-      "api_gateway_stage": "api"
+      "api_gateway_stage": "api",
+      "autogen_policy": false,
+      "environment_variables": {
+        "ZTR_DYNAMODB_TABLE_PREFIX": "ZAE-TFR-"
+      },
+      "manage_iam_role": true
     }
   }
 }

@@ -1,3 +1,9 @@
+# Chalice files
 .chalice/deployments/
 .chalice/venv/
+
+# Terraform modules
+.terraform/
+
+# IDEs
 .idea

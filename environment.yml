@@ -13,6 +13,7 @@ dependencies:
   # - ngrok, open an account at ngrok.com
 
   # Runtime Dependencies (must match requirements.txt)
+  - environs
   - pynamodb
   - semver
 

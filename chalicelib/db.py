@@ -13,22 +13,18 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from chalice import Chalice
 
-from chalicelib.modules import bp as modules_bp
+def db_init():
+    from chalicelib.models import ModuleModel
 
-app = Chalice(app_name="terraform-registry")
-app.experimental_feature_flags.update(["BLUEPRINTS"])
-app.register_blueprint(modules_bp)
+    if not ModuleModel.exists():
+        ModuleModel.create_table(
+            read_capacity_units=1, write_capacity_units=1, wait=True
+        )
 
 
-@app.route("/.well-known/terraform.json")
-def discovery():
-    """The Terraform Registry Service Discovery Protocol
+def db_destroy():
+    from chalicelib.models import ModuleModel
 
-       ref: https://www.terraform.io/docs/internals/remote-service-discovery.html#discovery-process
-    """
-    host = app.current_request.headers["host"]
-    # Only HTTPS is allowed for Terraform Registry protocol
-    # Use ngrok to redirect https traffic for free during development
-    return {"modules.v1": f"/"}
+    if ModuleModel.exists():
+        ModuleModel.delete_table()
