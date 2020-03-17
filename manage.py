@@ -120,9 +120,23 @@ fqvm_argument = click.argument(
 
 @record.command("create")
 @fqvm_argument
-def record_create(fqvmn):
+@click.argument("getter-url", metavar="getter-url")
+def record_create(fqvmn, getter_url):
     """
     Create a new Terraform Module Record
+
+    Hashicorp's `getter-url` format supports a variety of protocols,
+    and implements various tricks to do certain things. For full-details
+    on the URL format see http://bit.ly/2Wxgxk7.
+
+    \b
+    Examples:
+        - Local:
+              ./local
+        - GitHub:
+              github.com/terraform-aws-modules/terraform-aws-vpc?ref=2.29.0
+        - S3:
+              s3::http://s3.amazonaws.com/bucket/hello.txt
     """
     from chalicelib.models import ModuleModel, ModuleName
 
@@ -133,7 +147,9 @@ def record_create(fqvmn):
         return 1
     except ModuleModel.DoesNotExist as dne:
         module = ModuleModel(
-            module_name=ModuleName(namespace, name, provider), version=version
+            module_name=ModuleName(namespace, name, provider),
+            version=version,
+            getter_url=getter_url,
         )
         module.save()
 
@@ -151,7 +167,7 @@ def record_delete(fqvmn):
     try:
         module = ModuleModel.get(hash_key=module_name, range_key=version)  # noqa
         module.delete()
-    except ModuleModel.DoesNotExist as dne:
+    except ModuleModel.DoesNotExist:
         pass
 
 
