@@ -68,6 +68,7 @@ class ModuleModel(Model):
 
     module_name = ModuleNameAttribute(hash_key=True)
     version = UnicodeAttribute(range_key=True)
+    getter_url = UnicodeAttribute()
 
     source = UnicodeAttribute(null=True)
 

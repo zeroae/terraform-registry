@@ -107,7 +107,7 @@ def test_download_success(
 
     def mock_get(hash_key, **kwargs):
         rv = ModuleModel(hash_key, version=kwargs["range_key"])
-        rv.source = "./name"
+        rv.getter_url = "./name"
         return rv
 
     def mock_save(*args, **kwargs):

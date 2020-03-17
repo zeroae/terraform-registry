@@ -177,7 +177,7 @@ def download(namespace: str, name: str, provider: str, version: str):
     try:
         module_name = ModuleName(namespace, name, provider)
         module = ModuleModel.get(module_name, range_key=version)
-        if module.source is None:
+        if module.getter_url is None:
             raise ChaliceViewError(
                 msg=f"{namespace}/{name}/{provider}/{version} is missing the `source` attribute."
             )
@@ -185,7 +185,7 @@ def download(namespace: str, name: str, provider: str, version: str):
         return Response(
             body=None,
             status_code=HTTPStatus.NO_CONTENT,
-            headers={"X-Terraform-Get": module.source},
+            headers={"X-Terraform-Get": module.getter_url},
         )
     except DoesNotExist as dne:
         return Response(
