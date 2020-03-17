@@ -14,7 +14,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-def db_init():
+def db_init() -> bool:
     from chalicelib.models import ModuleModel
 
     if not ModuleModel.exists():
@@ -22,9 +22,25 @@ def db_init():
             read_capacity_units=1, write_capacity_units=1, wait=True
         )
 
+    return ModuleModel.exists()
 
-def db_destroy():
+
+def db_destroy() -> bool:
     from chalicelib.models import ModuleModel
 
     if ModuleModel.exists():
         ModuleModel.delete_table()
+
+    return not ModuleModel.exists()
+
+
+def db_dump(filename):
+    from chalicelib.models import ModuleModel
+
+    ModuleModel.dump(filename)
+
+
+def db_load(filename):
+    from chalicelib.models import ModuleModel
+
+    ModuleModel.load(filename)

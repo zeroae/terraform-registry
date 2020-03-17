@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 #  Copyright (c) 2020 Zero A.E., LLC
 #
 #  This program is free software: you can redistribute it and/or modify
