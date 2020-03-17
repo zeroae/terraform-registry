@@ -123,7 +123,7 @@ fqvm_argument = click.argument(
 @click.argument("getter-url", metavar="getter-url")
 def record_create(fqvmn, getter_url):
     """
-    Create a new Terraform Module Record
+    Create a new Terraform Module Record.
 
     Hashicorp's `getter-url` format supports a variety of protocols,
     and implements various tricks to do certain things. For full-details
@@ -158,7 +158,7 @@ def record_create(fqvmn, getter_url):
 @fqvm_argument
 def record_delete(fqvmn):
     """
-    Delete a Terraform Module Record
+    Delete a Terraform Module Record.
     """
     from chalicelib.models import ModuleModel, ModuleName
 
@@ -169,6 +169,17 @@ def record_delete(fqvmn):
         module.delete()
     except ModuleModel.DoesNotExist:
         pass
+
+
+@record.command("list")
+def record_list():
+    """
+    Lists all the Terraform Modules in backend.
+    """
+    from chalicelib.models import ModuleModel
+
+    for module in ModuleModel.scan(attributes_to_get=["module_name", "version"]):
+        click.echo(f"{module.module_name}/{module.version}")
 
 
 if __name__ == "__main__":
