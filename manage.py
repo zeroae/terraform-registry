@@ -15,8 +15,12 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import json
 import os
+from http import HTTPStatus
+from urllib.parse import urljoin
 
 import click
+import dateutil
+import requests
 
 from chalicelib import db
 
@@ -113,13 +117,13 @@ def validate_fqvmn(ctx, param, value):
         )
 
 
-fqvm_argument = click.argument(
+fqvmn_argument = click.argument(
     "fqvmn", callback=validate_fqvmn, metavar="<namespace>/<name>/<provider>/<version>"
 )
 
 
 @record.command("create")
-@fqvm_argument
+@fqvmn_argument
 @click.argument("getter-url", metavar="getter-url")
 def record_create(fqvmn, getter_url):
     """
@@ -155,7 +159,7 @@ def record_create(fqvmn, getter_url):
 
 
 @record.command("delete")
-@fqvm_argument
+@fqvmn_argument
 def record_delete(fqvmn):
     """
     Delete a Terraform Module Record.
@@ -180,6 +184,65 @@ def record_list():
 
     for module in ModuleModel.scan(attributes_to_get=["module_name", "version"]):
         click.echo(f"{module.module_name}/{module.version}")
+
+
+@record.group("import")
+def record_import():
+    """
+    Import Terraform module from external sources
+    """
+
+
+def discover_modules_v1(registry):
+    url = f"https://{registry}/.well-known/terraform.json"
+    r = requests.get(url)
+    return urljoin(url, r.json()["modules.v1"])
+
+
+@record_import.command("registry")
+@fqvmn_argument
+@click.option(
+    "--registry",
+    help="A v1 compatible Terraform registry",
+    default="registry.terraform.io",
+    show_default=True,
+)
+def record_import_registry(fqvmn, registry):
+    """
+    Import Terraform Module metadata from (private) registry
+    """
+    from chalicelib.models import ModuleName, ModuleModel
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+
+    registry_url = discover_modules_v1(registry)
+
+    metadata_r = requests.get(f"{registry_url}{module_name}")
+    if metadata_r.status_code != HTTPStatus.OK:
+        click.echo(f"{module_name} was not found in {registry}")
+        return 1
+    metadata = metadata_r.json()
+
+    getter_url_r = requests.get(f"{registry_url}{module_name}/download")
+    if (
+        getter_url_r.status_code != HTTPStatus.NO_CONTENT
+        or "X-Terraform-Get" not in getter_url_r.headers
+    ):
+        click.echo(f"{module_name} go-getter-url was not found...")
+        return 2
+    getter_url = getter_url_r.headers["X-Terraform-Get"]
+
+    module = ModuleModel(module_name, version, getter_url=getter_url)
+    module.verified = metadata["verified"]
+
+    module.owner = metadata["owner"]
+    module.description = metadata["description"]
+    module.source = metadata["source"]
+
+    module.published_at = dateutil.parser.isoparse(metadata["published_at"])
+
+    module.save()
 
 
 if __name__ == "__main__":

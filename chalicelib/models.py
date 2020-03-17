@@ -70,13 +70,11 @@ class ModuleModel(Model):
     version = UnicodeAttribute(range_key=True)
     getter_url = UnicodeAttribute()
 
-    source = UnicodeAttribute(null=True)
-
-    published_at = UTCDateTimeAttribute(default_for_new=datetime.utcnow)
-
     verified = BooleanAttribute(null=True)
 
     owner = UnicodeAttribute(null=True)
     description = UnicodeAttribute(null=True)
+    source = UnicodeAttribute(null=True)
 
+    published_at = UTCDateTimeAttribute(default_for_new=datetime.utcnow)
     downloads = NumberAttribute(default_for_new=0)
