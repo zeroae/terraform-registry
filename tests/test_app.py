@@ -19,6 +19,6 @@ from pytest_chalice.handlers import RequestHandler
 
 
 def test_discovery(client: RequestHandler) -> None:
-    response = client.get("/.well-known/terraform.json", headers={"host": "localhost"})
+    response = client.get("/.well-known/terraform.json")
     assert response.status_code == HTTPStatus.OK
-    assert response.json == {"modules.v1": "/"}
+    assert response.json == {"modules.v1": "/modules/"}
