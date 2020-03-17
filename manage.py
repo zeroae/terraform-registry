@@ -62,6 +62,7 @@ def db():
     """
     Manage the DynamoDB backend (init, destroy, backup, restore).
     """
+    pass
 
 
 @db.command(name="init")
@@ -85,6 +86,7 @@ def db_destroy():
 def db_backup(filename):
     """Backups the backend content."""
     db.db_dump(filename)
+    return 0
 
 
 @db.command(name="restore")
@@ -92,6 +94,65 @@ def db_backup(filename):
 def db_restore(filename):
     """Restores the backend content."""
     db.db_load(filename)
+    return 0
+
+
+@go.group(name="record")
+def record():
+    """Manage records in the backend (create, delete, import, ...)"""
+    pass
+
+
+def validate_fqvmn(ctx, param, value):
+    try:
+        namespace, name, provider, version = map(str, value.split("/", 4))
+        return (namespace, name, provider, version)
+    except ValueError:
+        raise click.BadParameter(
+            f"{param} needs to be in format <namespace>/<name>/<provider>/<version>"
+        )
+
+
+fqvm_argument = click.argument(
+    "fqvmn", callback=validate_fqvmn, metavar="<namespace>/<name>/<provider>/<version>"
+)
+
+
+@record.command("create")
+@fqvm_argument
+def record_create(fqvmn):
+    """
+    Create a new Terraform Module Record
+    """
+    from chalicelib.models import ModuleModel, ModuleName
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+    try:
+        ModuleModel.get(module_name, version)  # noqa
+        return 1
+    except ModuleModel.DoesNotExist as dne:
+        module = ModuleModel(
+            module_name=ModuleName(namespace, name, provider), version=version
+        )
+        module.save()
+
+
+@record.command("delete")
+@fqvm_argument
+def record_delete(fqvmn):
+    """
+    Delete a Terraform Module Record
+    """
+    from chalicelib.models import ModuleModel, ModuleName
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+    try:
+        module = ModuleModel.get(hash_key=module_name, range_key=version)  # noqa
+        module.delete()
+    except ModuleModel.DoesNotExist as dne:
+        pass
 
 
 if __name__ == "__main__":
