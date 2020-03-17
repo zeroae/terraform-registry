@@ -78,7 +78,3 @@ class ModuleModel(Model):
     description = UnicodeAttribute(null=True)
 
     downloads = NumberAttribute(default_for_new=0)
-
-
-if not ModuleModel.exists():
-    ModuleModel.create_table(read_capacity_units=1, write_capacity_units=1, wait=True)

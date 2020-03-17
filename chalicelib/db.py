@@ -12,36 +12,19 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import os
-import random
-import string
-
-import pytest
-from chalice import Chalice
-
-from chalicelib.db import db_init, db_destroy
 
 
-@pytest.fixture(autouse=True, scope="session")
-def db() -> None:
-    # Configure Database
-    ddb_table_prefix_env = "ZTR_DYNAMODB_TABLE_PREFIX"
+def db_init():
+    from chalicelib.models import ModuleModel
 
-    prefix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    os.environ[ddb_table_prefix_env] = f"ztr-pytest-{prefix}"
-
-    # Initialize Tables/Models
-    db_init()
-
-    yield
-
-    # Destroy Tables/Models
-    db_destroy()
-    os.unsetenv(ddb_table_prefix_env)
+    if not ModuleModel.exists():
+        ModuleModel.create_table(
+            read_capacity_units=1, write_capacity_units=1, wait=True
+        )
 
 
-@pytest.fixture
-def app(db) -> Chalice:
-    from app import app as chalice_app
+def db_destroy():
+    from chalicelib.models import ModuleModel
 
-    return chalice_app
+    if ModuleModel.exists():
+        ModuleModel.delete_table()

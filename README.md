@@ -7,6 +7,9 @@ An implementation of the [Terraform Registry API][registry-api] using [Chalice][
   - [dflook/terraform-registry](https://github.com/dflook/terraform-registry)
   - [outsideris/citizen](https://github.com/outsideris/citizen)
   - [rmb938/tf-registry](https://github.com/rmb938/tf-registry)
+  
+## Deployment on AWS
+
 
 ---
 [chalice]: https://github.com/aws/chalice
