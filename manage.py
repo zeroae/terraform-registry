@@ -15,8 +15,12 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import json
 import os
+from http import HTTPStatus
+from urllib.parse import urljoin
 
 import click
+import dateutil
+import requests
 
 from chalicelib import db
 
@@ -57,20 +61,21 @@ def go(stage) -> None:
     _apply_chalice_stage(stage)
 
 
-@go.group()
-def db():
+@go.group("db")
+def db_group():
     """
     Manage the DynamoDB backend (init, destroy, backup, restore).
     """
+    pass
 
 
-@db.command(name="init")
+@db_group.command(name="init")
 def db_init():
     """Initializes the backend."""
     return db.db_init()
 
 
-@db.command(name="destroy")
+@db_group.command(name="destroy")
 def db_destroy():
     """Destroys the backend."""
     click.confirm(
@@ -80,18 +85,165 @@ def db_destroy():
     return db.db_destroy()
 
 
-@db.command(name="backup")
+@db_group.command(name="backup")
 @click.argument("filename", type=click.Path(dir_okay=False, writable=True))
 def db_backup(filename):
     """Backups the backend content."""
     db.db_dump(filename)
+    return 0
 
 
-@db.command(name="restore")
+@db_group.command(name="restore")
 @click.argument("filename", type=click.Path(exists=True, dir_okay=False))
 def db_restore(filename):
     """Restores the backend content."""
     db.db_load(filename)
+    return 0
+
+
+@go.group(name="record")
+def record():
+    """Manage records in the backend (create, delete, import, ...)"""
+    pass
+
+
+def validate_fqvmn(ctx, param, value):
+    try:
+        namespace, name, provider, version = map(str, value.split("/", 4))
+        return (namespace, name, provider, version)
+    except ValueError:
+        raise click.BadParameter(
+            f"{param} needs to be in format <namespace>/<name>/<provider>/<version>"
+        )
+
+
+fqvmn_argument = click.argument(
+    "fqvmn", callback=validate_fqvmn, metavar="<namespace>/<name>/<provider>/<version>"
+)
+
+
+@record.command("create")
+@fqvmn_argument
+@click.argument("getter-url", metavar="getter-url")
+@click.option("--verified/--not-verified", default=False, show_default=True)
+@click.option("--owner", type=click.STRING, help="The module owner.")
+@click.option("--description", type=click.STRING, help="The module description.")
+@click.option("--source", type=click.STRING, help="The source code location.")
+def record_create(fqvmn, getter_url, verified, owner, description, source):
+    """
+    Create a new Terraform Module Record.
+
+    Hashicorp's `getter-url` format supports a variety of protocols,
+    and implements various tricks to do certain things. For full-details
+    on the URL format see http://bit.ly/2Wxgxk7.
+
+    \b
+    Examples:
+        - Local:
+              ./local
+        - GitHub:
+              github.com/terraform-aws-modules/terraform-aws-vpc?ref=2.29.0
+        - S3:
+              s3::http://s3.amazonaws.com/bucket/hello.txt
+    """
+    from chalicelib.models import ModuleModel, ModuleName
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+    try:
+        ModuleModel.get(module_name, version)  # noqa
+        return 1
+    except ModuleModel.DoesNotExist as dne:
+        module = ModuleModel(
+            module_name=ModuleName(namespace, name, provider),
+            version=version,
+            getter_url=getter_url,
+            verified=verified if verified else None,
+            owner=owner,
+            description=description,
+            source=source,
+        )
+        module.save()
+
+
+@record.command("delete")
+@fqvmn_argument
+def record_delete(fqvmn):
+    """
+    Delete a Terraform Module Record.
+    """
+    from chalicelib.models import ModuleModel, ModuleName
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+    try:
+        module = ModuleModel.get(hash_key=module_name, range_key=version)  # noqa
+        module.delete()
+    except ModuleModel.DoesNotExist:
+        pass
+
+
+@record.command("list")
+def record_list():
+    """
+    Lists all the Terraform Modules in backend.
+    """
+    from chalicelib.models import ModuleModel
+
+    for module in ModuleModel.scan(attributes_to_get=["module_name", "version"]):
+        click.echo(f"{module.module_name}/{module.version}")
+
+
+def discover_modules_v1(registry):
+    url = f"https://{registry}/.well-known/terraform.json"
+    r = requests.get(url)
+    return urljoin(url, r.json()["modules.v1"])
+
+
+@record.command("import")
+@fqvmn_argument
+@click.option(
+    "--registry",
+    help="A v1 compatible Terraform registry",
+    default="registry.terraform.io",
+    show_default=True,
+)
+def record_import(fqvmn, registry):
+    """
+    Import a new Terraform Module from an external registry.
+    """
+    from chalicelib.models import ModuleName, ModuleModel
+
+    namespace, name, provider, version = fqvmn
+    module_name = ModuleName(namespace, name, provider)
+
+    registry_url = discover_modules_v1(registry)
+
+    metadata_r = requests.get(f"{registry_url}{module_name}")
+    if metadata_r.status_code != HTTPStatus.OK:
+        click.echo(f"{module_name} was not found in {registry}")
+        return 1
+    metadata = metadata_r.json()
+
+    getter_url_r = requests.get(f"{registry_url}{module_name}/download")
+    if (
+        getter_url_r.status_code != HTTPStatus.NO_CONTENT
+        or "X-Terraform-Get" not in getter_url_r.headers
+    ):
+        click.echo(f"{module_name} go-getter-url was not found...")
+        return 2
+    getter_url = getter_url_r.headers["X-Terraform-Get"]
+
+    module = ModuleModel(module_name, version, getter_url=getter_url)
+    module.verified = metadata["verified"]
+
+    module.owner = metadata["owner"]
+    module.description = metadata["description"]
+    module.source = metadata["source"]
+
+    module.published_at = dateutil.parser.isoparse(metadata["published_at"])
+
+    module.save()
 
 
 if __name__ == "__main__":
