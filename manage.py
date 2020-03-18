@@ -194,21 +194,13 @@ def record_list():
         click.echo(f"{module.module_name}/{module.version}")
 
 
-@record.group("import")
-def record_import():
-    """
-    Import Terraform module from external sources
-    """
-    pass
-
-
 def discover_modules_v1(registry):
     url = f"https://{registry}/.well-known/terraform.json"
     r = requests.get(url)
     return urljoin(url, r.json()["modules.v1"])
 
 
-@record_import.command("registry")
+@record.command("import")
 @fqvmn_argument
 @click.option(
     "--registry",
@@ -216,9 +208,9 @@ def discover_modules_v1(registry):
     default="registry.terraform.io",
     show_default=True,
 )
-def record_import_registry(fqvmn, registry):
+def record_import(fqvmn, registry):
     """
-    Import Terraform Module metadata from (private) registry
+    Import a new Terraform Module from an external registry.
     """
     from chalicelib.models import ModuleName, ModuleModel
 
