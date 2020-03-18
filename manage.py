@@ -125,7 +125,11 @@ fqvmn_argument = click.argument(
 @record.command("create")
 @fqvmn_argument
 @click.argument("getter-url", metavar="getter-url")
-def record_create(fqvmn, getter_url):
+@click.option("--verified/--not-verified", default=False, show_default=True)
+@click.option("--owner", type=click.STRING, help="The module owner.")
+@click.option("--description", type=click.STRING, help="The module description.")
+@click.option("--source", type=click.STRING, help="The source code location.")
+def record_create(fqvmn, getter_url, verified, owner, description, source):
     """
     Create a new Terraform Module Record.
 
@@ -154,6 +158,10 @@ def record_create(fqvmn, getter_url):
             module_name=ModuleName(namespace, name, provider),
             version=version,
             getter_url=getter_url,
+            verified=verified if verified else None,
+            owner=owner,
+            description=description,
+            source=source,
         )
         module.save()
 
