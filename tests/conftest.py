@@ -52,9 +52,8 @@ def ddb_url(docker_client: DockerClient) -> str:
     )
 
     def health_status():
-        return docker_client.api.inspect_container(container.id)["State"]["Health"][
-            "Status"
-        ]
+        state = docker_client.api.inspect_container(container.id)["State"] 
+        return state["Health"]["Status"]
 
     while health_status() != "healthy":
         sleep(0.5)
