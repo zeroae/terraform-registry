@@ -1,3 +1,4 @@
 environs
 pynamodb
+python-dateutil
 semver
