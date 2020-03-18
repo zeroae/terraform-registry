@@ -61,21 +61,21 @@ def go(stage) -> None:
     _apply_chalice_stage(stage)
 
 
-@go.group()
-def db():
+@go.group("db")
+def db_group():
     """
     Manage the DynamoDB backend (init, destroy, backup, restore).
     """
     pass
 
 
-@db.command(name="init")
+@db_group.command(name="init")
 def db_init():
     """Initializes the backend."""
     return db.db_init()
 
 
-@db.command(name="destroy")
+@db_group.command(name="destroy")
 def db_destroy():
     """Destroys the backend."""
     click.confirm(
@@ -85,7 +85,7 @@ def db_destroy():
     return db.db_destroy()
 
 
-@db.command(name="backup")
+@db_group.command(name="backup")
 @click.argument("filename", type=click.Path(dir_okay=False, writable=True))
 def db_backup(filename):
     """Backups the backend content."""
@@ -93,7 +93,7 @@ def db_backup(filename):
     return 0
 
 
-@db.command(name="restore")
+@db_group.command(name="restore")
 @click.argument("filename", type=click.Path(exists=True, dir_okay=False))
 def db_restore(filename):
     """Restores the backend content."""
