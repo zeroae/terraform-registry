@@ -191,6 +191,7 @@ def record_import():
     """
     Import Terraform module from external sources
     """
+    pass
 
 
 def discover_modules_v1(registry):
