@@ -7,6 +7,7 @@ dependencies:
   # Development Dependencies
   - chalice 1.12
   - click >=6,<8
+  - docker-py
   - ipython
   - liquidprompt
   - python 3.7

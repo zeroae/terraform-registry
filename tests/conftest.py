@@ -15,20 +15,73 @@
 import os
 import random
 import string
+from time import sleep
 
+import docker
 import pytest
 from chalice import Chalice
+from docker import DockerClient
+from docker.models.containers import Container
+from docker.types import Healthcheck
 
 from chalicelib.db import db_init, db_destroy
 
 
-@pytest.fixture(autouse=True, scope="session")
-def db() -> None:
+@pytest.fixture(scope="session")
+def docker_client() -> DockerClient:
+    client = docker.from_env()
+    yield client
+    client.close()
+
+
+@pytest.fixture(scope="session")
+def ddb_url(docker_client: DockerClient) -> str:
+    SECOND: int = 1_000_000_000
+    local_port: int = random.randint(49152, 65535)
+    container: Container = docker_client.containers.run(
+        "amazon/dynamodb-local",
+        detach=True,
+        healthcheck=Healthcheck(
+            test="curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'",
+            interval=1 * SECOND,
+            timeout=1 * SECOND,
+            retries=3,
+        ),
+        ports={"8000/tcp": local_port},
+        remove=True,
+    )
+
+    def health_status():
+        state = docker_client.api.inspect_container(container.id)["State"]
+        return state["Health"]["Status"]
+
+    while health_status() != "healthy":
+        sleep(0.5)
+        container.reload()
+
+    yield f"http://localhost:{local_port}"
+    container.stop()
+
+
+@pytest.fixture(scope="session")
+def aws_credentials() -> None:
+    # Configure fake AWS Credentials...
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "fake_key"
+    os.environ["AWS_ACCESS_KEY_ID"] = "fake_id"
+
+    yield
+
+    os.unsetenv("AWS_SECRET_ACCESS_KEY")
+    os.unsetenv("AWS_ACCESS_KEY_ID")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def db(ddb_url, aws_credentials) -> None:
     # Configure Database
-    ddb_table_prefix_env = "ZTR_DYNAMODB_TABLE_PREFIX"
+    os.environ["ZTR_DYNAMODB_URL"] = ddb_url
 
     prefix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    os.environ[ddb_table_prefix_env] = f"ztr-pytest-{prefix}"
+    os.environ["ZTR_DYNAMODB_TABLE_PREFIX"] = f"ztr-pytest-{prefix}"
 
     # Initialize Tables/Models
     db_init()
@@ -37,7 +90,9 @@ def db() -> None:
 
     # Destroy Tables/Models
     db_destroy()
-    os.unsetenv(ddb_table_prefix_env)
+
+    os.unsetenv("ZTR_DYNAMODB_TABLE_PREFIX")
+    os.unsetenv("ZTR_DYNAMODB_URL")
 
 
 @pytest.fixture
