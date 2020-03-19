@@ -2,6 +2,17 @@
   "version": "2.0",
   "app_name": "terraform-registry",
   "stages": {
+    "local": {
+      "api_gateway_stage": "local",
+      "autogen_policy": true,
+      "environment_variables": {
+        "AWS_ACCESS_KEY_ID": "local_id",
+        "AWS_SECRET_ACCESS_KEY": "local_key",
+        "ZTR_DYNAMODB_URL": "http://backend:8000",
+        "ZTR_DYNAMODB_TABLE_PREFIX": "ZTR-LOCAL"
+      },
+      "manage_iam_role": false
+    },
     "dev": {
       "api_gateway_stage": "dev",
       "autogen_policy": false,

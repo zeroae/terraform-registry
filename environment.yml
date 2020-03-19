@@ -9,7 +9,6 @@ dependencies:
   - click >=6,<8
   - docker-py
   - ipython
-  - liquidprompt
   - python 3.7
   - pre-commit
   - requests

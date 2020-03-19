@@ -1,0 +1,53 @@
+version: '3.4'
+
+volumes:
+  chalice-app:
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+      args: &args
+        CHALICE_VERSION: 1.12
+    image: zeroae/terraform-registry-app:local
+    healthcheck:
+      test: "curl --fail -s http://localhost:8000/.well-known/terraform.json"
+    ports:
+      - "8000:8000"
+    volumes:
+      - $PWD:/opt/chalice
+
+  manage:
+    build:
+      context: .
+      dockerfile: manage.Dockerfile
+      args: *args
+    image: zeroae/terraform-registry-manage:local
+    stdin_open: true
+    tty: true
+    volumes:  # /bind from /api ?
+      - $PWD:/opt/chalice
+
+  backend:
+    image: amazon/dynamodb-local:1.12.0
+    healthcheck:
+      test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
+    expose:
+      - 8000
+
+
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.1
+    # Enables the web UI and tells Traefik to listen to docker
+    command: --api.insecure=true --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
