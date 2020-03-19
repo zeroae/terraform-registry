@@ -1,15 +1,16 @@
-FROM python:3.7
+FROM python:3.7-alpine
 
-VOLUME /opt/chalice
+RUN apk add curl
 
 ARG CHALICE_VERSION
+VOLUME /opt/chalice
+WORKDIR /opt/chalice
+EXPOSE 8000
 RUN pip install chalice==$CHALICE_VERSION
 
-EXPOSE 8000
-ENTRYPOINT ["chalice", "--project-dir=/opt/chalice"]
-CMD ["local", "--host=0.0.0.0", "--port=8000", "--stage=local"]
+ENTRYPOINT [ "chalice", "--project-dir=/opt/chalice" ]
+CMD ["local", "--host=0.0.0.0", "--stage=local"]
 
+# Candidate for ON-BUILD
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
-
