@@ -14,14 +14,19 @@ services:
     healthcheck:
       test: "curl --fail -s http://localhost:8000/.well-known/terraform.json"
     labels:
-      - traefik.http.routers.app.rule=Host(`tf.vcap.me`)
-      - traefik.http.routers.app.tls.domains[0].main=tf.vcap.me
-      - traefik.http.routers.app.tls.certresolver=foo
-
+      - traefik.http.routers.app.rule=Host(`tf.$ACME_DNS_SUFFIX`)
+      - traefik.http.routers.app.tls.certresolver=default
     expose:
       - 8000
     volumes:
       - ./:/opt/chalice:ro
+
+  backend:
+    image: amazon/dynamodb-local:1.12.0
+    healthcheck:
+      test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
+    expose:
+      - 8000
 
   manage:
     build:
@@ -29,19 +34,13 @@ services:
       dockerfile: manage.Dockerfile
       args: *args
     image: zeroae/terraform-registry-manage:local
+    links:
+      - reverse-proxy:tf.$ACME_DNS_SUFFIX
     stdin_open: true
     tty: true
     volumes:
       - ./:/opt/chalice
 
-  backend:
-    image: amazon/dynamodb-local:1.12.0
-    healthcheck:
-      test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
-    labels:
-      - traefik.http.routers.backend.rule=Host(`ddb.vcap.me`)
-    expose:
-      - 8000
 
   reverse-proxy:
     # The official v2 Traefik docker image
@@ -52,6 +51,13 @@ services:
       - --providers.docker
       - --entryPoints.web.address=:80
       - --entryPoints.websecure.address=:443
+      - --certificatesResolvers.default.acme.storage=/etc/traefik/acme/acme.json
+      # Use Route53
+      - --certificatesResolvers.default.acme.dnsChallenge.provider=route53
+    #environment:
+      # Please set your AWS credentials in an environment file or before calling docker-compose
+      # see https://go-acme.github.io/lego/dns/route53/#policy: for the  IAM policy
+      # that allows Traefik to do its job
     ports:
       # The HTTP(s) port
       - "80:80"
@@ -61,3 +67,6 @@ services:
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./.traefik/acme:/etc/traefik/acme
+      # We need access to ~/.aws so we can use AWS_PROFILE
+      - ~/.aws:/root/.aws/:ro
