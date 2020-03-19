@@ -1,7 +1,7 @@
 version: '3.4'
 
-volumes:
-  chalice-app:
+networks:
+  default:
 
 services:
   app:
@@ -13,10 +13,15 @@ services:
     image: zeroae/terraform-registry-app:local
     healthcheck:
       test: "curl --fail -s http://localhost:8000/.well-known/terraform.json"
-    ports:
-      - "8000:8000"
+    labels:
+      - traefik.http.routers.app.rule=Host(`tf.vcap.me`)
+      - traefik.http.routers.app.tls.domains[0].main=tf.vcap.me
+      - traefik.http.routers.app.tls.certresolver=foo
+
+    expose:
+      - 8000
     volumes:
-      - $PWD:/opt/chalice
+      - ./:/opt/chalice:ro
 
   manage:
     build:
@@ -26,24 +31,29 @@ services:
     image: zeroae/terraform-registry-manage:local
     stdin_open: true
     tty: true
-    volumes:  # /bind from /api ?
-      - $PWD:/opt/chalice
+    volumes:
+      - ./:/opt/chalice
 
   backend:
     image: amazon/dynamodb-local:1.12.0
     healthcheck:
       test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
+    labels:
+      - traefik.http.routers.backend.rule=Host(`ddb.vcap.me`)
     expose:
       - 8000
-
 
   reverse-proxy:
     # The official v2 Traefik docker image
     image: traefik:v2.1
     # Enables the web UI and tells Traefik to listen to docker
-    command: --api.insecure=true --providers.docker
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
     ports:
-      # The HTTP port
+      # The HTTP(s) port
       - "80:80"
       - "443:443"
       # The Web UI (enabled by --api.insecure=true)
