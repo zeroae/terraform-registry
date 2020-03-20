@@ -13,7 +13,6 @@ dependencies:
   - python 3.7
   - pre-commit
   - requests
-  # - ngrok, open an account at ngrok.com
 
   # Runtime Dependencies (must match requirements.txt)
   - environs
@@ -25,3 +24,4 @@ dependencies:
   - coverage
   - pytest
   - pytest-chalice
+  - terraform

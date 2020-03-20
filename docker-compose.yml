@@ -1,0 +1,68 @@
+version: '3.4'
+
+networks:
+  default:
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+      args:
+        CHALICE_VERSION: 1.12
+    image: zeroae/terraform-registry-app:local
+    healthcheck:
+      test: "curl --fail -s http://localhost:8000/.well-known/terraform.json"
+    labels:
+      - traefik.http.routers.app.rule=Host(`tf.$ACME_DNS_SUFFIX`)
+      - traefik.http.routers.app.tls.certresolver=default
+    expose:
+      - 8000
+    volumes:
+      - ./:/opt/chalice:ro
+
+  backend:
+    image: amazon/dynamodb-local:1.12.0
+    command: -jar DynamoDBLocal.jar -dbPath ./data
+    healthcheck:
+      test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
+    expose:
+      - 8000
+    volumes:
+      - ./.ddb:/home/dynamodblocal/data
+
+  manage:
+    build:
+      context: .
+      dockerfile: manage.Dockerfile
+    image: zeroae/terraform-registry-manage:local
+    links:
+      - reverse-proxy:tf.$ACME_DNS_SUFFIX
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./:/opt/chalice
+
+
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.1
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      - --certificatesResolvers.default.acme.storage=/etc/traefik/acme/acme.json
+      - --certificatesResolvers.default.acme.dnsChallenge.provider=$ACME_DNS_PROVIDER
+    ports:
+      # The HTTP(s) port
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./secrets/$ACME_DNS_SUFFIX/acme:/etc/traefik/acme
+      - ./secrets/aws:/root/.aws/:ro
