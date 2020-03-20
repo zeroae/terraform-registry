@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: app.Dockerfile
-      args: &args
+      args:
         CHALICE_VERSION: 1.12
     image: zeroae/terraform-registry-app:local
     healthcheck:
@@ -32,7 +32,6 @@ services:
     build:
       context: .
       dockerfile: manage.Dockerfile
-      args: *args
     image: zeroae/terraform-registry-manage:local
     links:
       - reverse-proxy:tf.$ACME_DNS_SUFFIX
@@ -52,12 +51,7 @@ services:
       - --entryPoints.web.address=:80
       - --entryPoints.websecure.address=:443
       - --certificatesResolvers.default.acme.storage=/etc/traefik/acme/acme.json
-      # Use Route53
-      - --certificatesResolvers.default.acme.dnsChallenge.provider=route53
-    #environment:
-      # Please set your AWS credentials in an environment file or before calling docker-compose
-      # see https://go-acme.github.io/lego/dns/route53/#policy: for the  IAM policy
-      # that allows Traefik to do its job
+      - --certificatesResolvers.default.acme.dnsChallenge.provider=$ACME_DNS_PROVIDER
     ports:
       # The HTTP(s) port
       - "80:80"
@@ -65,8 +59,7 @@ services:
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./.traefik/acme:/etc/traefik/acme
-      # We need access to ~/.aws so we can use AWS_PROFILE
-      - ~/.aws:/root/.aws/:ro
+      # So that Traefik can listen to Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./secrets/acme:/etc/traefik/acme
+      - ./secrets/aws:/root/.aws/:ro

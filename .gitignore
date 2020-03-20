@@ -9,4 +9,4 @@
 .idea
 
 # ACME
-.traefik/
+acme.json

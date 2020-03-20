@@ -8,12 +8,11 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
   - [outsideris/citizen](https://github.com/outsideris/citizen)
   - [rmb938/tf-registry](https://github.com/rmb938/tf-registry)
   
-## Deployment on AWS
-
-## Development
+## Local Deployment
 1. Requirements: 
     - conda
-    - docker
+    - docker-compose
+    - keybase
 
 1. Clone the repository
     ```shell script
@@ -21,30 +20,54 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     cd terraform-registry
     ``` 
    
-1. Create the conda environment and activate it
+1. Clone the secrets (submodules did not work)
     ```shell script
-    conda env create
-    conda activate terraform-registry
+    git clone keybase://team/zeroae/terraform-registry-secrets secrets
     ```
-
+   
+1. Create conda environment
+    ```shell script
+    conda env create 
+    conda activate terraform-registry
+    ```` 
+   
 1. Start the app on local mode
     ```shell script
     docker-compose up -d
     ```
    
-1. Attach to the Management container (Detach Ctrl-P + Ctrl-Q)
+1. Attach to the Management container 
     ```shell script
     docker attach terraform-registry_management_1
     conda activate terraform-registry
     ./manage.py --help
     ```
    
-1. Initialize Database (from inside management container)
+    1. Initialize the Database
+       ```shell script
+       ./manage.py db init
+       ```
+    1. (Optional) Restore the initial "local.ddb"
+        ```shell script
+        ./manage.py db restore tests/integration/local.ddb
+        ```
+    1. (Optional) Verify Terraform CLI can reach the local server
+        ```shell script
+        cd tests/integration/tf.local.zeroae.net
+        rm -rf .terraform
+        terraform init
+        ```
+    1. Detach from the container
+        ```shell script
+        Ctrl-P + Ctrl-Q
+        ```
+       
+1. (Optional) Verify Terraform CLI can reach the local registry (outside management)
     ```shell script
-    ./manage.py db init
-    ./manage.py record import terraform-aws-modules/vpc/2.29.0
+    cd tests/integration/tf.local.zeroae.net
+    rm -rf .terraform
+    terraform init
     ```
-
 
 ---
 [12-factor]: https://www.12factor.net
