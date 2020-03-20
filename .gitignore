@@ -8,5 +8,5 @@
 # IDEs
 .idea
 
-# ACME
-acme.json
+# Secrets
+/secrets/
