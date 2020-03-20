@@ -38,20 +38,16 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
    
 1. Attach to the Management container 
     ```shell script
-    docker attach terraform-registry_management_1
-    conda activate terraform-registry
+    docker attach terraform-registry_manage_1
     ./manage.py --help
     ```
    
     1. Initialize the Database
        ```shell script
        ./manage.py db init
+       ./manage.py db restore tests/integration/local.ddb
        ```
-    1. (Optional) Restore the initial "local.ddb"
-        ```shell script
-        ./manage.py db restore tests/integration/local.ddb
-        ```
-    1. (Optional) Verify Terraform CLI can reach the local server
+    1. Verify Terraform CLI can reach the local server
         ```shell script
         cd tests/integration/tf.local.zeroae.net
         rm -rf .terraform
@@ -62,7 +58,7 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
         Ctrl-P + Ctrl-Q
         ```
        
-1. (Optional) Verify Terraform CLI can reach the local registry (outside management)
+1. Verify Terraform CLI can reach the local registry (outside management)
     ```shell script
     cd tests/integration/tf.local.zeroae.net
     rm -rf .terraform
