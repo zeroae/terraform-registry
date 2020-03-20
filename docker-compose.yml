@@ -64,5 +64,5 @@ services:
     volumes:
       # So that Traefik can listen to Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./secrets/acme:/etc/traefik/acme
+      - ./secrets/$ACME_DNS_SUFFIX/acme:/etc/traefik/acme
       - ./secrets/aws:/root/.aws/:ro
