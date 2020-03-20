@@ -23,10 +23,13 @@ services:
 
   backend:
     image: amazon/dynamodb-local:1.12.0
+    command: -jar DynamoDBLocal.jar -dbPath ./data
     healthcheck:
       test: "curl -s -I http://localhost:8000 | grep -q 'HTTP/1.1 400 Bad Request'"
     expose:
       - 8000
+    volumes:
+      - ./.ddb:/home/dynamodblocal/data
 
   manage:
     build:

@@ -10,3 +10,6 @@
 
 # Secrets
 /secrets/
+
+# Ignore DynamoDB-local
+/.ddb/
