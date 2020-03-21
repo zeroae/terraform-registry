@@ -23,6 +23,9 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
 1. Clone the secrets (submodules did not work)
     ```shell script
     git clone keybase://team/zeroae/terraform-registry-secrets secrets
+   
+    # Fix the acme.json file permissions. 600 is not committable to Git
+    find . -type f -name acme.json -exec chmod 600 {} \;
     ```
    
 1. Create conda environment
@@ -34,6 +37,11 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
 1. Start the app on local mode
     ```shell script
     docker-compose up -d
+    ```
+   
+1. Wait until the `app`, `backend` and `manage` services are healthy
+    ```shell script
+    watch docker-compose ps  
     ```
    
 1. Attach to the Management container 
