@@ -7,41 +7,42 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
   - [dflook/terraform-registry](https://github.com/dflook/terraform-registry)
   - [outsideris/citizen](https://github.com/outsideris/citizen)
   - [rmb938/tf-registry](https://github.com/rmb938/tf-registry)
-  
-## Local Deployment
+
+## Deployments
 1. Requirements: 
     - conda
     - docker-compose
-    - keybase
+    - keybase (for secrets)
 
-1. Clone the repository
+1. Clone the repository and secrets
     ```shell script
     git clone https://github.com/zeroae/terraform-registry.git
     cd terraform-registry
-    ``` 
-   
-1. Clone the secrets (submodules did not work)
-    ```shell script
+    # Submodules did not work
     git clone keybase://team/zeroae/terraform-registry-secrets secrets
-    ```
-   
+   ``` 
+
 1. Create conda environment
     ```shell script
     conda env create 
     conda activate terraform-registry
     ```` 
-   
+
+### Local Deployment
+1. Additional Requirements:
+    - docker-compose
+
 1. Start the app on local mode
     ```shell script
     docker-compose up -d
     ```
-   
+
 1. Attach to the Management container 
     ```shell script
     docker attach terraform-registry_manage_1
     ./manage.py --help
     ```
-   
+
     1. Initialize the Database
        ```shell script
        ./manage.py db init
@@ -57,10 +58,35 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
         ```shell script
         Ctrl-P + Ctrl-Q
         ```
-       
+
 1. Verify Terraform CLI can reach the local registry (outside management)
     ```shell script
     cd tests/integration/tf.local.zeroae.net
+    rm -rf .terraform
+    terraform init
+    ```
+
+## AWS Deployment
+1. Use Chalice to (re)deploy the `dev` stage to AWS
+    ```shell script
+    export AWS_CONFIG_FILE="./secrets/aws/config"
+    chalice --stage=dev deploy
+    ```
+
+1. Initialize the Database
+    ```shell script
+    ./manage.py --stage=dev db init
+
+    # Optionally load content inot the DynamoDB backend
+    ./manage.py --stage=dev db restore tests/integration/local.ddb
+    ```
+
+1. Configure a DNS entry to point to the dev stage.
+   documentation t.b.d., this is already setup for tf.zeroae.net
+
+1. Verify Terraform CLI can reach the remote server
+    ```shell script
+    cd tests/integration/tf.zeroae.net
     rm -rf .terraform
     terraform init
     ```

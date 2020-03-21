@@ -1,0 +1,23 @@
+{
+  "resources": [
+    {
+      "name": "api_handler_role",
+      "resource_type": "iam_role",
+      "role_arn": "arn:aws:iam::162714053306:role/terraform-registry-dev-api_handler",
+      "role_name": "terraform-registry-dev-api_handler"
+    },
+    {
+      "name": "api_handler",
+      "resource_type": "lambda_function",
+      "lambda_arn": "arn:aws:lambda:us-east-1:162714053306:function:terraform-registry-dev"
+    },
+    {
+      "name": "rest_api",
+      "resource_type": "rest_api",
+      "rest_api_id": "bxma9z0tz4",
+      "rest_api_url": "https://bxma9z0tz4.execute-api.us-east-1.amazonaws.com/dev/"
+    }
+  ],
+  "schema_version": "2.0",
+  "backend": "api"
+}
