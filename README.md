@@ -39,6 +39,11 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     docker-compose up -d
     ```
    
+1. Wait until the `app`, `backend` and `manage` services are healthy
+    ```shell script
+    watch docker-compose ps  
+    ```
+   
 1. Attach to the Management container 
     ```shell script
     docker attach terraform-registry_manage_1
