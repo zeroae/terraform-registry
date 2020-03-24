@@ -36,6 +36,8 @@ services:
       context: .
       dockerfile: manage.Dockerfile
     image: zeroae/terraform-registry-manage:local
+    healthcheck:
+      test: "/bin/true"
     links:
       - reverse-proxy:tf.$ACME_DNS_SUFFIX
     stdin_open: true
@@ -47,14 +49,14 @@ services:
   reverse-proxy:
     # The official v2 Traefik docker image
     image: traefik:v2.1
-    # Enables the web UI and tells Traefik to listen to docker
     command:
       - --api.insecure=true
-      - --providers.docker
-      - --entryPoints.web.address=:80
-      - --entryPoints.websecure.address=:443
       - --certificatesResolvers.default.acme.storage=/etc/traefik/acme/acme.json
       - --certificatesResolvers.default.acme.dnsChallenge.provider=$ACME_DNS_PROVIDER
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      - --ping=true
+      - --providers.docker
     ports:
       # The HTTP(s) port
       - "80:80"
@@ -64,5 +66,7 @@ services:
     volumes:
       # So that Traefik can listen to Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # So that Trafik can read/store ACME Certificates
       - ./secrets/$ACME_DNS_SUFFIX/acme:/etc/traefik/acme
+      # So that Traefik can talk to AWS for Route53 DNS Challenges
       - ./secrets/aws:/root/.aws/:ro

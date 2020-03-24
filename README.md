@@ -18,10 +18,13 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     ```shell script
     git clone https://github.com/zeroae/terraform-registry.git
     cd terraform-registry
+
     # Submodules did not work
     git clone keybase://team/zeroae/terraform-registry-secrets secrets
-   ``` 
-
+    # Fix the acme.json file permissions. 600 is not committable to Git
+    find . -type f -name acme.json -exec chmod 600 {} \;
+    ```
+   
 1. Create conda environment
     ```shell script
     conda env create 
@@ -36,7 +39,12 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     ```shell script
     docker-compose up -d
     ```
-
+   
+1. Wait until the `app`, `backend` and `manage` services are healthy
+    ```shell script
+    watch docker-compose ps  
+    ```
+   
 1. Attach to the Management container 
     ```shell script
     docker attach terraform-registry_manage_1
@@ -77,7 +85,7 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     ```shell script
     ./manage.py --stage=dev db init
 
-    # Optionally load content inot the DynamoDB backend
+    # Optionally load content into the DynamoDB backend
     ./manage.py --stage=dev db restore tests/integration/local.ddb
     ```
 
