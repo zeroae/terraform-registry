@@ -74,7 +74,7 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     terraform init
     ```
 
-## AWS Deployment
+## AWS (dev) Deployment
 1. Use Chalice to (re)deploy the `dev` stage to AWS
     ```shell script
     export AWS_CONFIG_FILE="./secrets/aws/config"
