@@ -81,8 +81,15 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     ./manage.py --stage=dev db restore tests/integration/local.ddb
     ```
 
-1. Configure a DNS entry to point to the dev stage.
-   documentation t.b.d., this is already setup for tf.zeroae.net
+1. Configure a custom domain name(`tf.zeroae.net`) to point to the dev stage
+    1. Use the AWS Certificate Manager to register a certificate for `tf.zeroae.net`
+    1. Create a custom domain name in API Gateway
+        - `tf.zeroae.net`
+        - Edge Optimized
+        - TLS 1.2
+        - The ACM certificate from the previous step
+    1. Create an ALIAS DNS record for `tf.zeroae.net` pointing to the API Gateway Name and ZONE ID from previous step.
+    1. Add API Mapping for the dev Stage
 
 1. Verify Terraform CLI can reach the remote server
     ```shell script
