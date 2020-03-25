@@ -1,0 +1,38 @@
+<!--
+  ~ Copyright (c) 2020 Zero A.E., LLC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<form action="{{ github_url }}/organizations/{{ organization }}/settings/apps/new?state={{ nonce }}" method="post">
+    Create a GitHub App Manifest: <input type="text" name="manifest" id="manifest"><br>
+    <input type="submit" value="Submit">
+</form>
+
+<script>
+    input = document.getElementById("manifest")
+
+    input.value = JSON.stringify({
+        "name": {{ name | tojson }},
+        "description": {{ description | tojson }},
+        "url": {{ url | tojson }},
+        "hook_attributes": {
+            "url": {{ hook_url | tojson }},
+        },
+        "redirect_url": {{ redirect_url | tojson }},
+        "public": {{ public | tojson }},
+        "default_permissions": {{ default_permissions | tojson }},
+        "default_events": {{ default_events | tojson }}
+    })
+</script>

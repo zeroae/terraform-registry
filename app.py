@@ -15,11 +15,13 @@
 
 from chalice import Chalice
 
+from chalicelib.gh import bp as gh_bp
 from chalicelib.modules import bp as modules_bp
 
 app = Chalice(app_name="terraform-registry")
 app.experimental_feature_flags.update(["BLUEPRINTS"])
 app.register_blueprint(modules_bp, url_prefix="/modules")
+app.register_blueprint(gh_bp, url_prefix="/gh")
 
 
 @app.route("/.well-known/terraform.json")

@@ -1,4 +1,5 @@
 environs
+jinja2
 pynamodb
 python-dateutil
 semver

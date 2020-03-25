@@ -16,6 +16,7 @@ dependencies:
 
   # Runtime Dependencies (must match requirements.txt)
   - environs
+  - jinja2
   - pynamodb
   - python-dateutil
   - semver
