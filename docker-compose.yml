@@ -45,6 +45,11 @@ services:
     volumes:
       - ./:/opt/chalice
 
+  gh-events:
+    image: deltaprojects/smee-client
+    command:
+      - --url=https://smee.io/7yhhmly6sxc9EfS9
+      - --target=https://tf.${ACME_DNS_SUFFIX}/gh/events
 
   reverse-proxy:
     # The official v2 Traefik docker image

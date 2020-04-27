@@ -246,5 +246,16 @@ def record_import(fqvmn, registry):
     module.save()
 
 
+@go.group("gh")
+def gh():
+    """GitHub Application Integration."""
+
+
+@gh.command("register")
+def gh_register():
+    """Register Application."""
+    raise NotImplementedError()
+
+
 if __name__ == "__main__":
     go()

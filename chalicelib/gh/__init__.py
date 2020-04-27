@@ -12,8 +12,8 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import uuid
 from http import HTTPStatus
+from random import random
 
 import requests
 from chalice import Blueprint, Response
@@ -23,19 +23,25 @@ bp: Blueprint = Blueprint(__name__)
 j2: Environment = Environment(loader=PackageLoader(__name__, "templates"))
 
 
-nonce = None
+nonce: str = None
 
 
-def _create_nonce():
+def _create_nonce() -> str:
     # TODO: Convert State into DynamoDB Entry with a short TTL
     global nonce
-    nonce = uuid.uuid4() if nonce is None else nonce
+    nonce = "".join(random.choices("01234567889abcedf", k=40))
     return nonce
 
 
-def _verify_nonce(rhs_nonce):
+def _verify_nonce(rhs_nonce: str):
+    # TODO: GitHub is not sending the state/nonce back...
+    return True
+
     global nonce
-    return nonce == rhs_nonce
+    if nonce and nonce == rhs_nonce:
+        nonce = None
+        return True
+    return False
 
 
 @bp.route("/")
@@ -45,34 +51,26 @@ def manifest():
     ref: https://softwareengineering.stackexchange.com/questions/99894/why-doesnt-http-have-post-redirect
     :return:
     """
-
-    nonce = _create_nonce()
+    from .config import GITHUB_URL
 
     app_url = "https://tf.local.zeroae.net"
     setup_html = j2.get_template("setup.html")
     body = setup_html.render(
-        github_url="https://github.com",
+        github_url=GITHUB_URL,
         organization="zeroae",
         name="Terraform Registry",
-        description="""
-            # Terraform Registry
-            Share Terraform Modules directly from GitHub using GitHub as the 
-            Storage, Authentication, and Authorization backends.
-        """,
+        description="""# Terraform Registry
+                       Share Terraform Modules directly from GitHub using GitHub as the 
+                       Storage, Authentication, and Authorization backends.""",
         url=app_url,
         redirect_url=f"{app_url}/gh/callback",
         hook_url=f"{app_url}/gh/events",
         public=False,
         default_permissions={"contents": "read"},
         default_events=["meta", "release", "repository"],
-        nonce=nonce,
+        nonce=_create_nonce(),
     )
     return Response(body=body, status_code=200, headers={"Content-Type": "text/html"})
-
-
-@bp.route("/introspect")
-def introspect():
-    return bp.current_request.to_dict()
 
 
 @bp.route("/callback")
@@ -85,6 +83,7 @@ def manifest_callback():
 
     :return:
     """
+    from .config import GITHUB_API_URL
 
     query_params = bp.current_request.query_params
     query_params = query_params if query_params else dict()
@@ -105,9 +104,16 @@ def manifest_callback():
             headers={"Content-Type": "text/html"},
         )
 
-    requests.post()
+    s: requests.Session = requests.Session()
+    s.headers["Accept"] = "application/vnd.github.machine-man-preview+json"
 
-    raise NotImplementedError()
+    r: requests.Response = s.post(f"{GITHUB_API_URL}/app-manifests/{code}/conversions")
+
+    return Response(
+        body=r.content,
+        status_code=r.status_code,
+        headers={"Content-Type": r.headers["Content-Type"]},
+    )
 
 
 @bp.route("/events")

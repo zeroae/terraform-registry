@@ -12,13 +12,13 @@ dependencies:
   - liquidprompt
   - python 3.7
   - pre-commit
-  - requests
 
   # Runtime Dependencies (must match requirements.txt)
   - environs
   - jinja2
   - pynamodb
   - python-dateutil
+  - requests
   - semver
 
   # Test Dependencies
