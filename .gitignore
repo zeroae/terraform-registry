@@ -2,6 +2,9 @@
 .chalice/deployments/
 .chalice/venv/
 
+# python cache
+__pycache__
+
 # Terraform modules
 .terraform/
 
