@@ -16,7 +16,9 @@
   -->
 
 <form action="{{ github_url }}/organizations/{{ organization }}/settings/apps/new?state={{ nonce }}" method="post">
-    Create a GitHub App Manifest: <input type="text" name="manifest" id="manifest"><br>
+    Create a GitHub App Manifest:
+    <input hidden=true, type="text" name="manifest" id="manifest">
+    <br>
     <input type="submit" value="Submit">
 </form>
 
