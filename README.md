@@ -78,8 +78,9 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
 1. Use Chalice to (re)deploy the `dev` stage to AWS
     ```shell script
     export AWS_CONFIG_FILE="./secrets/aws/config"
-    chalice --stage=dev deploy
+    chalice deploy --stage=dev
     ```
+   You may also set the `AWS_DEFAULT_PROFILE` environment variable to control where the API is deployed
 
 1. Initialize the Database
     ```shell script
