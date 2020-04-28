@@ -21,7 +21,7 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
 
     # Submodules did not work
     git clone keybase://team/zeroae/terraform-registry-secrets secrets
-    # Fix the acme.json file permissions. 600 is not committable to Git
+    # Fix the acme.json file permissions. 600 is not able to be committed to Git
     find . -type f -name acme.json -exec chmod 600 {} \;
     ```
    
@@ -107,8 +107,69 @@ Zero A.E.'s [12-Factor][12-factor] codebase of the [Terraform Registry API][regi
     terraform init
     ```
 
+## CLI Usage (`manage.py`)
+
+When utilizing the `manage.py` remember that if a `--stage` is not specified then all of the actions will be taken on
+the local environment that can be established by the `docker-compose` configuration described above.
+
+### Working with the DynamoDB Backend
+
+The backend for the API can be controlled through the `manage.py` command line interface (CLI).
+
+**Initialize**
+
+```shell script
+./manage.py db init
+```
+
+**Backup**
+
+```shell script
+./manage.py db backup <out filename>
+```
+
+**Restore**
+
+```shell script
+./manage.py db restore <in file>
+```
+
+**Destroy**
+
+```shell script
+./manage.py db destroy
+```
+
+### Working with Modules
+
+Placing modules in the registry can be done through the `manage.py` command line interface (CLI).
+
+Each module record is a combination of the name, the provider, the version and then the location in which that module
+can be found.
+
+**Create a Record**
+
+```shell script
+./manage.py record create <module>/<name>/<provider>/<version> <go-getter-url>
+```
+
+Additional Options: `--verified`, `--owner`, `--description`, `--source`
+
+**Delete a Record**
+
+```shell script
+./manage.py record delete <module>/<name>/<provider>/<version>
+```
+
+**Import a Record from [registry.terraform.io][registry.terraform.io]**
+
+```shell script
+./manage.py record import [--registry registry.terraform.io] <module>/<name>/<provider>/<version>
+```
+
 ---
 [12-factor]: https://www.12factor.net
 [chalice]: https://github.com/aws/chalice
 [pynamodb]: https://github.com/pynamodb/PynamoDB
 [registry-api]: https://www.terraform.io/docs/registry/api.html
+[registry.terraform.io]: https://registry.terraform.io
