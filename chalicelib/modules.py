@@ -15,6 +15,7 @@
 from functools import cmp_to_key
 from http import HTTPStatus
 from re import sub
+from typing import Dict
 
 import semver
 from chalice import Blueprint, Response, ChaliceViewError
@@ -27,7 +28,7 @@ bp = Blueprint(__name__)
 
 
 @bp.route("/")
-def list_all():
+def list_all() -> Response:
     """
     Lists all modules in the registry
     ref: https://www.terraform.io/docs/registry/api.html#list-modules
@@ -37,11 +38,12 @@ def list_all():
 
 
 @bp.route("/{namespace}")
-def list_namespace(namespace):
+def list_namespace(namespace) -> Response:
     """
     Lists all modules in the given namespace
     ref: https://www.terraform.io/docs/registry/api.html#list-modules
-    
+
+    :param namespace: The module namespace
     """
     bp.current_request.query_params["q"] = "*"
     bp.current_request.query_params["namespace"] = namespace
@@ -49,7 +51,7 @@ def list_namespace(namespace):
 
 
 @bp.route("/search")
-def search():
+def search() -> Response:
     """
     Search for modules in the registry
     ref: https://www.terraform.io/docs/registry/api.html#search-modules
@@ -67,10 +69,13 @@ def search():
 
 
 @bp.route("/{namespace}/{name}")
-def list_latest_all_providers(namespace, name):
+def list_latest_all_providers(namespace: str, name: str) -> Response:
     """
     List Latest Version of Module for All Providers
     ref: https://www.terraform.io/docs/registry/api.html#list-latest-version-of-module-for-all-providers
+
+    :param namespace: The module namespace
+    :param name: The module name
     """
     # Optional
     offset = bp.current_request.uri_params.get("offset", 0)
@@ -80,20 +85,28 @@ def list_latest_all_providers(namespace, name):
 
 
 @bp.route("/{namespace}/{name}/{provider}")
-def list_latest(namespace, name, provider):
+def list_latest(namespace: str, name: str, provider: str) -> Response:
     """
     Latest Version for a Specific Module Provider
     ref: https://www.terraform.io/docs/registry/api.html#latest-version-for-a-specific-module-provider
+
+    :param namespace: The module namespace
+    :param name: The module name
+    :param provider: The module primary provider
     """
 
     raise NotImplementedError()
 
 
 @bp.route("/{namespace}/{name}/{provider}/versions")
-def list_versions(namespace, name, provider):
+def list_versions(namespace: str, name: str, provider: str) -> Dict:
     """
     List Available Versions for a Specific Module
     ref: https://www.terraform.io/docs/registry/api.html#list-available-versions-for-a-specific-module
+
+    :param namespace: The module namespace
+    :param name: The module name
+    :param provider: The module primary provider
     """
 
     fqmn = ModuleName(namespace, name, provider)
@@ -111,17 +124,22 @@ def list_versions(namespace, name, provider):
 
 
 @bp.route("/{namespace}/{name}/{provider}/{version}")
-def get_module(namespace, name, provider, version):
+def get_module(namespace: str, name: str, provider: str, version: str) -> Response:
     """
-    Get a Specific Module
+    Get details about Specific Module
     ref: https://www.terraform.io/docs/registry/api.html#get-a-specific-module
+
+    :param namespace: The module namespace
+    :param name: The module name
+    :param provider: The module primary provider
+    :param version: The module version
     """
 
     raise NotImplementedError()
 
 
 @bp.route("/{namespace}/{name}/{provider}/download")
-def download_latest(namespace: str, name: str, provider: str):
+def download_latest(namespace: str, name: str, provider: str) -> Response:
     """
     Download the Latest Version of a Module
     ref: https://www.terraform.io/docs/registry/api.html#download-the-latest-version-of-a-module
@@ -156,7 +174,7 @@ def download_latest(namespace: str, name: str, provider: str):
 
 
 @bp.route("/{namespace}/{name}/{provider}/{version}/download")
-def download(namespace: str, name: str, provider: str, version: str):
+def download(namespace: str, name: str, provider: str, version: str) -> Response:
     """
     Download Source Code for a Specific Module Version
     ref: https://www.terraform.io/docs/registry/api.html#download-source-code-for-a-specific-module-version
