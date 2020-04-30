@@ -187,22 +187,22 @@ def record_delete(fqvmn: str) -> None:
 
 
 @record.command("list")
-@click.option("--include-url", is_flag=True, default=False,
+@click.option("--show-url", is_flag=True, default=False,
               help="Show the url the that is registered for the module's FQVMN")
-def record_list(include_url: bool):
+def record_list(show_url: bool):
     """
     Lists all the Terraform Modules in backend.
 
-    :param include_url: If the url should be included in the printing of the module list
+    :param show_url: If the url should be included in the printing of the module list
     """
     from chalicelib.models import ModuleModel
 
     model_attributes = ["module_name", "version"]
-    if include_url:
+    if show_url:
         model_attributes.append("getter_url")
 
     for module in ModuleModel.scan(attributes_to_get=model_attributes):
-        if include_url:
+        if show_url:
             click.echo(f"{module.module_name}/{module.version} -> {module.getter_url}")
         else:
             click.echo(f"{module.module_name}/{module.version}")
