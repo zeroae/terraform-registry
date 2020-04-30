@@ -16,6 +16,7 @@
 import json
 import os
 from http import HTTPStatus
+from typing import AnyStr
 from urllib.parse import urljoin
 
 import click
@@ -168,9 +169,11 @@ def record_create(fqvmn, getter_url, verified, owner, description, source):
 
 @record.command("delete")
 @fqvmn_argument
-def record_delete(fqvmn):
+def record_delete(fqvmn: str) -> None:
     """
     Delete a Terraform Module Record.
+
+    :param fqvmn: The fully qualified version module name
     """
     from chalicelib.models import ModuleModel, ModuleName
 
@@ -184,17 +187,33 @@ def record_delete(fqvmn):
 
 
 @record.command("list")
-def record_list():
+@click.option("--show-url", is_flag=True, default=False,
+              help="Show the url the that is registered for the module's FQVMN")
+def record_list(show_url: bool):
     """
     Lists all the Terraform Modules in backend.
+
+    :param show_url: If the url should be included in the printing of the module list
     """
     from chalicelib.models import ModuleModel
 
-    for module in ModuleModel.scan(attributes_to_get=["module_name", "version"]):
-        click.echo(f"{module.module_name}/{module.version}")
+    model_attributes = ["module_name", "version"]
+    if show_url:
+        model_attributes.append("getter_url")
+
+    for module in ModuleModel.scan(attributes_to_get=model_attributes):
+        if show_url:
+            click.echo(f"{module.module_name}/{module.version} -> {module.getter_url}")
+        else:
+            click.echo(f"{module.module_name}/{module.version}")
 
 
-def discover_modules_v1(registry):
+def discover_modules_v1(registry: str) -> AnyStr:
+    """
+    Returns the discovery URL for the given registry domain
+
+    :param registry: The registry domain
+    """
     url = f"https://{registry}/.well-known/terraform.json"
     r = requests.get(url)
     return urljoin(url, r.json()["modules.v1"])
@@ -208,9 +227,12 @@ def discover_modules_v1(registry):
     default="registry.terraform.io",
     show_default=True,
 )
-def record_import(fqvmn, registry):
+def record_import(fqvmn: str, registry: str):
     """
     Import a new Terraform Module from an external registry.
+
+    :param fqvmn: The fully qualified version module name
+    :param registry: The registry to import the module from, defaults to registry.terraform.io
     """
     from chalicelib.models import ModuleName, ModuleModel
 
@@ -227,8 +249,8 @@ def record_import(fqvmn, registry):
 
     getter_url_r = requests.get(f"{registry_url}{module_name}/download")
     if (
-        getter_url_r.status_code != HTTPStatus.NO_CONTENT
-        or "X-Terraform-Get" not in getter_url_r.headers
+            getter_url_r.status_code != HTTPStatus.NO_CONTENT
+            or "X-Terraform-Get" not in getter_url_r.headers
     ):
         click.echo(f"{module_name} go-getter-url was not found...")
         return 2
