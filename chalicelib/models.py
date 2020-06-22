@@ -25,7 +25,7 @@ from pynamodb.attributes import (
 from pynamodb.constants import STRING
 from pynamodb.models import Model
 
-from .config import ZTR_DYNAMODB_TABLE_PREFIX, ZTR_DYNAMODB_URL
+from .config import ZTR_DYNAMODB_TABLE_PREFIX, ZTR_DYNAMODB_URL, ZTR_DYNAMODB_REGION
 
 
 @dataclass
@@ -65,6 +65,7 @@ class ModuleModel(Model):
     class Meta:
         host = ZTR_DYNAMODB_URL
         table_name = f"{ZTR_DYNAMODB_TABLE_PREFIX}Module"
+        region = ZTR_DYNAMODB_REGION
 
     module_name = ModuleNameAttribute(hash_key=True)
     version = UnicodeAttribute(range_key=True)

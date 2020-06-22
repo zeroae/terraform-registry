@@ -25,3 +25,4 @@ with env.prefixed("ZTR_"):
     with env.prefixed("DYNAMODB_"):
         ZTR_DYNAMODB_URL = env.str("URL", default=None)
         ZTR_DYNAMODB_TABLE_PREFIX = env.str("TABLE_PREFIX")
+        ZTR_DYNAMODB_REGION = env.str("REGION", default="us-east-1")
